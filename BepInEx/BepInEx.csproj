@@ -8,6 +8,7 @@
     <CopyDocumentationFilesFromPackages>true</CopyDocumentationFilesFromPackages>
     <VersionPrefix>$(BepInExVersionPrefix)</VersionPrefix>
     <VersionSuffix>$(BepInExVersionSuffix)</VersionSuffix>
+    <Version>5.4.23.13374</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,17 +28,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HarmonyX" Version="2.9.0"/>
-    <PackageReference Include="Mono.Cecil" Version="0.10.4"/>
-    <PackageReference Include="MonoMod.RuntimeDetour" Version="22.1.29.1"/>
-    <PackageReference Include="MonoMod.Utils" Version="22.1.29.1"/>
-    <PackageReference Include="UnityEngine" Version="5.6.1" IncludeAssets="compile"/>
+    <PackageReference Include="HarmonyX" Version="2.9.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.10.4" />
+    <PackageReference Include="MonoMod.RuntimeDetour" Version="22.1.29.1" />
+    <PackageReference Include="MonoMod.Utils" Version="22.1.29.1" />
+    <PackageReference Include="UnityEngine" Version="5.6.1" IncludeAssets="compile" />
   </ItemGroup>
 
   <Target Name="DeletePdbFromPublish" AfterTargets="Publish">
     <ItemGroup>
-      <FilesToDelete Include="$(PublishDir)*.pdb"/>
+      <FilesToDelete Include="$(PublishDir)*.pdb" />
     </ItemGroup>
-    <Delete Files="@(FilesToDelete)"/>
+    <Delete Files="@(FilesToDelete)" />
   </Target>
 </Project>

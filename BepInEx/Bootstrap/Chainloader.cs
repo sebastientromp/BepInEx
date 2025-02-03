@@ -1,4 +1,4 @@
-﻿using BepInEx.Configuration;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
@@ -47,7 +47,7 @@ namespace BepInEx.Bootstrap
 			{
 				var prop = AccessTools.PropertyGetter(typeof(Application), "isBatchMode");
 				if (prop != null)
-					return (bool) prop.Invoke(null, null);
+					return (bool)prop.Invoke(null, null);
 				return SystemInfo.graphicsDeviceID == 0;
 			}
 		}
@@ -59,7 +59,7 @@ namespace BepInEx.Bootstrap
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			get => isEditor ?? (isEditor = Application.isEditor) ?? false;
 		}
-		
+
 		/// <summary>
 		/// List of all <see cref="BepInPlugin"/> loaded via the chainloader.
 		/// </summary>
@@ -100,7 +100,7 @@ namespace BepInEx.Bootstrap
 				return;
 
 			ThreadingHelper.Initialize();
-			
+
 			// Set vitals
 			if (gameExePath != null)
 			{
@@ -132,7 +132,12 @@ namespace BepInEx.Bootstrap
 
 			// Don't write to Unity logs in headless mode since Unity logs are already shown in console
 			if (!IsHeadless)
-				Logger.Listeners.Add(new UnityLogListener());
+			{
+				if (ConfigUnityLogWriter.Value)
+				{
+					Logger.Listeners.Add(new UnityLogListener());
+				}
+			}
 			else
 			{
 				if (Logger.Listeners.FirstOrDefault(l => l is ConsoleLogListener) is ConsoleLogListener consoleLogListener)
@@ -148,18 +153,18 @@ namespace BepInEx.Bootstrap
 
 			_initialized = true;
 		}
-		
+
 		private static void ReplayPreloaderLogs(ICollection<LogEventArgs> preloaderLogEvents)
 		{
 			if (preloaderLogEvents == null)
 				return;
-			
+
 			var unityLogger = new UnityLogListener();
 			Logger.Listeners.Add(unityLogger);
-			
+
 			// Temporarily disable the console log listener (if there is one from preloader) as we replay the preloader logs
 			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
-			
+
 			if (logListener != null)
 				Logger.Listeners.Remove(logListener);
 
@@ -169,10 +174,10 @@ namespace BepInEx.Bootstrap
 			foreach (var preloaderLogEvent in preloaderLogEvents)
 				Logger.InternalLogEvent(preloaderLogSource, preloaderLogEvent);
 
-			Logger.Sources.Remove(preloaderLogSource);	
+			Logger.Sources.Remove(preloaderLogSource);
 
 			Logger.Listeners.Remove(unityLogger);
-			
+
 			if (logListener != null)
 				Logger.Listeners.Add(logListener);
 		}
@@ -379,7 +384,7 @@ namespace BepInEx.Bootstrap
 					foreach (var dependency in pluginInfo.Dependencies)
 					{
 						bool IsHardDependency(BepInDependency dep) => (dep.Flags & BepInDependency.DependencyFlags.HardDependency) != 0;
-						
+
 						// If the dependency wasn't already processed, it's missing altogether
 						bool dependencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
 						if (!dependencyExists || pluginVersion < dependency.MinimumVersion)
@@ -412,9 +417,7 @@ namespace BepInEx.Bootstrap
 					{
 						bool IsEmptyVersion(Version v) => v.Major == 0 && v.Minor == 0 && v.Build <= 0 && v.Revision <= 0;
 
-						string message = $@"Could not load [{pluginInfo}] because it has missing dependencies: {
-							string.Join(", ", missingDependencies.Select(s => IsEmptyVersion(s.MinimumVersion) ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
-							}";
+						string message = $@"Could not load [{pluginInfo}] because it has missing dependencies: {string.Join(", ", missingDependencies.Select(s => IsEmptyVersion(s.MinimumVersion) ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
 
@@ -465,7 +468,7 @@ namespace BepInEx.Bootstrap
 		}
 
 		#region Config
-		
+
 		internal static readonly ConfigEntry<bool> ConfigHideBepInExGOs = ConfigFile.CoreConfig.Bind(
 			"Chainloader", "HideManagerGameObject",
 			false,
@@ -479,7 +482,12 @@ namespace BepInEx.Bootstrap
 			"Logging", "UnityLogListening",
 			true,
 			"Enables showing unity log messages in the BepInEx logging system.");
-		
+
+		private static readonly ConfigEntry<bool> ConfigUnityLogWriter = ConfigFile.CoreConfig.Bind(
+			"Logging", "UnityLogWriting",
+			true,
+			"Enables writing to unity logs.");
+
 		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "WriteUnityLog",
 			false,
